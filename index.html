@@ -1064,7 +1064,7 @@
   <section class="view" id="view-packliste">
     <div class="card">
       <h2 id="packHeading">🎒 Packliste</h2>
-      <p class="sub" id="packSub">Gemeinsame Sachen + persönlicher Kram pro Familie.</p>
+      <p class="sub" id="packSub">Gemeinsame Sachen + persönlicher Kram pro Person.</p>
 
       <!-- Member tabs -->
       <div class="subtabs member-tabs" id="packMemberTabs"></div>
@@ -1907,7 +1907,7 @@ function renderPacklist() {
     heading.innerHTML = `🎒 Packliste — ${escapeHtml(label)}`;
     subText.textContent = isMine
       ? 'Eure Familienliste. Alle aus eurer Farbe sehen und ändern dasselbe.'
-      : `Persönlicher Kram der Familie ${escapeHtml(label)}.`;
+      : `Persönlicher Kram von ${escapeHtml(label)}.`;
     renderPersonalPack(color);
   }
 }
