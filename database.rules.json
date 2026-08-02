@@ -1,0 +1,47 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "state": {
+      ".read": true,
+      ".write": true,
+      ".validate": "!newData.exists() || (newData.hasChildren(['schema']) && newData.child('schema').val() === 3 && newData.child('schema').isNumber())",
+      "schema":      { ".validate": "newData.isNumber() && newData.val() === 3" },
+      "version":     { ".validate": "newData.isNumber() && newData.val() < 10000000" },
+      "lastEditBy":  { ".validate": "newData.isString() && newData.val().length < 30" },
+      "lastEditAt":  { ".validate": "newData.isNumber()" },
+      "departureDate": { ".validate": "newData.isString() && newData.val().length < 12" },
+      "tripDates": {
+        ".validate": "newData.hasChildren() || !newData.exists()",
+        "$colorKey": {
+          ".validate": "newData.hasChildren(['from','to']) && $colorKey.matches(/^[0-9a-f]{6}$/)",
+          "from": { ".validate": "newData.isString() && newData.val().matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/)" },
+          "to":   { ".validate": "newData.isString() && newData.val().matches(/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/) && newData.val() >= newData.parent().child('from').val()" },
+          "$other": { ".validate": false }
+        }
+      },
+      "members": {
+        ".validate": "newData.hasChildren() || !newData.exists()",
+        "$idx": {
+          ".validate": "newData.hasChildren(['id','name','color'])",
+          "id":    { ".validate": "newData.isString() && newData.val().length < 30" },
+          "name":  { ".validate": "newData.isString() && newData.val().length < 30" },
+          "color": { ".validate": "newData.isString() && newData.val().matches(/^#[0-9a-fA-F]{6}$/)" },
+          "$other": { ".validate": false }
+        }
+      },
+      "pack":         { ".validate": "newData.hasChildren() || !newData.exists()" },
+      "shop":         { ".validate": "newData.hasChildren() || !newData.exists()" },
+      "excursions":   { ".validate": "newData.hasChildren() || !newData.exists()" },
+      "personalPack": { ".validate": "newData.hasChildren() || !newData.exists()" },
+      "meals":        { ".validate": "newData.hasChildren() || !newData.exists()" },
+      "expenses":     { ".validate": "newData.hasChildren() || !newData.exists()" },
+      "contacts":     { ".validate": "newData.hasChildren() || !newData.exists()" },
+      "$other": { ".validate": false }
+    },
+    "$other": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}

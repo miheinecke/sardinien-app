@@ -214,6 +214,77 @@
     font-style: italic;
   }
 
+  /* ---- Reisedaten pro Familie ---- */
+  .date-editor {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .date-editor label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: rgba(28, 42, 31, 0.62);
+    flex: 1 1 150px;
+  }
+  .date-editor input[type="date"] {
+    font: inherit;
+    font-size: 15px;
+    padding: 10px 12px;
+    border-radius: var(--r-sm);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--text);
+    min-height: 44px;          /* iOS-tauglich antippbar */
+    box-sizing: border-box;
+    width: 100%;
+  }
+  .date-editor input[type="date"]:focus {
+    outline: none;
+    border-color: var(--primary-mid);
+    box-shadow: 0 0 0 3px rgba(94, 113, 134, 0.18);
+  }
+  .date-hint {
+    font-size: 13px;
+    color: rgba(28, 42, 31, 0.62);
+    margin: 8px 0 0;
+    min-height: 18px;
+  }
+  .trip-overview {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .trip-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: var(--r-md);
+    padding: 10px 14px;
+    font-size: 14px;
+    flex-wrap: wrap;
+  }
+  .trip-names { font-weight: 600; }
+  .trip-span  { margin-left: auto; font-variant-numeric: tabular-nums; }
+  .trip-days  {
+    color: rgba(28, 42, 31, 0.6);
+    font-size: 13px;
+    min-width: 58px;
+    text-align: right;
+  }
+  .trip-foot {
+    font-size: 13px;
+    color: rgba(28, 42, 31, 0.72);
+    padding: 6px 2px 0;
+    font-weight: 600;
+  }
+
   .hero-meta {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -1113,29 +1184,43 @@
   <section class="view active" id="view-uebersicht">
     <div class="card dashboard-card">
       <h2>🌿 Übersicht</h2>
-      <p class="sub">Eure Reise auf einen Blick. Unten die Crew — jede/r kann den eigenen Namen ändern, entfernen kann nur Michèle.</p>
+      <p class="sub">Eure Reise auf einen Blick. Trägt jede Familie ihre eigene An- und Abreise ein, rechnet sich alles automatisch.</p>
 
       <div class="dashboard-grid">
         <div class="dash-tile">
-          <div class="d-label">Reisedaten</div>
-          <div class="d-val">5.–18.9.</div>
+          <div class="d-label">Eure Reisedaten</div>
+          <div class="d-val" id="myDates">–</div>
         </div>
         <div class="dash-tile">
-          <div class="d-label">Dauer</div>
-          <div class="d-val">14 Tage</div>
+          <div class="d-label">Eure Dauer</div>
+          <div class="d-val" id="myDuration">–</div>
         </div>
         <div class="dash-tile">
-          <div class="d-label">Crew</div>
-          <div class="d-val" id="crewCount">–</div>
-        </div>
-        <div class="dash-tile">
-          <div class="d-label">Tage bis Abreise</div>
+          <div class="d-label">Tage bis eurer Abreise</div>
           <div class="d-val" id="countdown">–</div>
+        </div>
+        <div class="dash-tile">
+          <div class="d-label">Alle zusammen</div>
+          <div class="d-val" id="overlapVal">–</div>
         </div>
       </div>
 
-      <h3 class="dash-subhead">Crew</h3>
-      <div id="crewList" class="crew-list"></div>
+      <h3 class="dash-subhead">Eure An- und Abreise</h3>
+      <div class="date-editor">
+        <label>Anreise <input type="date" id="myFrom" min="2026-01-01" max="2027-12-31" /></label>
+        <label>Abreise <input type="date" id="myTo" min="2026-01-01" max="2027-12-31" /></label>
+      </div>
+      <p class="date-hint" id="dateHint"></p>
+
+      <h3 class="dash-subhead">Wer ist wann da</h3>
+      <div id="tripOverview" class="trip-overview"></div>
+
+      <!-- Mitgliederverwaltung: nur für den Admin sichtbar -->
+      <div id="adminCrewWrap" style="display:none;">
+        <h3 class="dash-subhead">Crew verwalten</h3>
+        <p class="sub" style="margin-top:-4px;">Nur du siehst diesen Bereich — zum Aufräumen falscher Einträge.</p>
+        <div id="crewList" class="crew-list"></div>
+      </div>
     </div>
   </section>
 
@@ -1563,7 +1648,8 @@ function defaultState() {
     meals: [],
     expenses: [],
     contacts: [],
-    departureDate: '2026-09-05'
+    departureDate: '2026-09-05',
+    tripDates: {}            // Farbe -> { from, to }, pro Familie
   };
 }
 
@@ -1573,8 +1659,72 @@ function loadState() {
     if (!raw) return defaultState();
     const parsed = JSON.parse(raw);
     if (parsed.schema !== SCHEMA_VERSION) return defaultState();
-    return { ...defaultState(), ...parsed };
+    return normalizeState({ ...defaultState(), ...parsed });
   } catch(e) { return defaultState(); }
+}
+
+/* ------------------------------------------------------------------
+   normalizeState — repariert, was Firebase auf dem Rückweg verändert.
+
+   Firebase speichert keine leeren Arrays und keine leeren Objekte: aus
+   { group: 'Neu', items: [] } wird beim Zurücklesen { group: 'Neu' }.
+   Ohne items-Array knallt jeder Renderer bei g.items.length — genau das
+   liess neu angelegte Kategorien verschwinden.
+   Ausserdem macht Firebase aus Arrays mit Lücken Objekte mit Zahlen-Keys.
+   Beides wird hier wieder in die Form gebracht, die die App erwartet.
+   ------------------------------------------------------------------ */
+function toArray(v) {
+  if (Array.isArray(v)) return v.filter(x => x != null);
+  if (v && typeof v === 'object') {
+    return Object.keys(v)
+      .sort((a, b) => (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0))
+      .map(k => v[k])
+      .filter(x => x != null);
+  }
+  return [];
+}
+
+function normalizeGroups(v) {
+  return toArray(v)
+    .filter(g => g && typeof g === 'object' && typeof g.group === 'string')
+    .map(g => ({ ...g, items: toArray(g.items) }));
+}
+
+function normalizeState(s) {
+  if (!s || typeof s !== 'object') return defaultState();
+
+  s.pack = normalizeGroups(s.pack);
+  s.shop = normalizeGroups(s.shop);
+
+  s.members    = toArray(s.members).filter(m => m && m.id);
+  s.excursions = toArray(s.excursions);
+  s.meals      = toArray(s.meals);
+  s.expenses   = toArray(s.expenses);
+  s.contacts   = toArray(s.contacts);
+
+  if (!s.personalPack || typeof s.personalPack !== 'object') s.personalPack = {};
+  Object.keys(s.personalPack).forEach(k => {
+    s.personalPack[k] = normalizeGroups(s.personalPack[k]);
+  });
+
+  if (typeof s.departureDate !== 'string' || !s.departureDate) {
+    s.departureDate = '2026-09-05';
+  }
+
+  // tripDates: Farbe -> { from, to }. Nur vollständige, plausible Paare behalten.
+  const td = {};
+  if (s.tripDates && typeof s.tripDates === 'object') {
+    Object.keys(s.tripDates).forEach(k => {
+      const v = s.tripDates[k];
+      if (v && typeof v.from === 'string' && typeof v.to === 'string'
+          && /^\d{4}-\d{2}-\d{2}$/.test(v.from) && /^\d{4}-\d{2}-\d{2}$/.test(v.to)
+          && v.from <= v.to) {
+        td[colorKey(k)] = { from: v.from, to: v.to };
+      }
+    });
+  }
+  s.tripDates = td;
+  return s;
 }
 
 function saveLocal() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
@@ -1592,6 +1742,7 @@ function uid() { return Math.random().toString(36).slice(2, 10); }
 let isApplyingRemote = false;
 let saveTimer = null;
 let firstSyncDone = false;
+let tripDatesBlocked = false;   // true = Rules kennen tripDates noch nicht
 
 function setSyncStatus(status, label) {
   const pill = document.getElementById('syncPill');
@@ -1606,8 +1757,9 @@ function initSync() {
     const remote = snap.val();
     isApplyingRemote = true;
     if (remote && remote.schema === SCHEMA_VERSION) {
-      // Adopt remote
-      state = { ...defaultState(), ...remote };
+      // Adopt remote — normalizeState repariert von Firebase entfernte
+      // leere Arrays (sonst verschwinden neu angelegte Kategorien)
+      state = normalizeState({ ...defaultState(), ...remote });
       // Ensure self in members
       if (me && !(state.members || []).some(m => m.id === me.id)) {
         state.members = [...(state.members || []), { ...me }];
@@ -1665,10 +1817,33 @@ function pushState() {
   sanitizePersonalPackKeys();
   setSyncStatus('syncing', 'Speichere…');
   stateRef.set(state)
-    .then(() => setSyncStatus('', 'Synchronisiert ' + nowLabel()))
+    .then(() => {
+      tripDatesBlocked = false;
+      setSyncStatus('', 'Synchronisiert ' + nowLabel());
+    })
     .catch(err => {
-      setSyncStatus('offline', 'Fehler — wird gespeichert wenn online');
-      console.error(err);
+      /* Solange die Firebase-Rules tripDates noch nicht kennen, lehnt der
+         Server den ganzen Write ab. Dann nochmal ohne tripDates schicken —
+         so bleibt die App für alle nutzbar, nur die Reisedaten sind lokal.
+         Sobald die Rules publiziert sind, greift automatisch der Normalfall. */
+      const hatDaten = state.tripDates && Object.keys(state.tripDates).length > 0;
+      if (!hatDaten) {
+        setSyncStatus('offline', 'Fehler — wird gespeichert wenn online');
+        console.error(err);
+        return;
+      }
+      const ohne = { ...state };
+      delete ohne.tripDates;
+      stateRef.set(ohne)
+        .then(() => {
+          tripDatesBlocked = true;
+          setSyncStatus('', 'Synchronisiert ' + nowLabel() + ' (Reisedaten lokal)');
+          renderDateEditor();
+        })
+        .catch(err2 => {
+          setSyncStatus('offline', 'Fehler — wird gespeichert wenn online');
+          console.error(err2);
+        });
     });
 }
 
@@ -1839,21 +2014,189 @@ document.getElementById('tabBar').addEventListener('click', (e) => {
 
 /* ====== HERO / CREW ====== */
 
+/* ====== REISEDATEN PRO FAMILIE ====== */
+
+/* tripDates ist eine Map Farbe -> { from, to } (beide 'YYYY-MM-DD').
+   Farbe als Schlüssel, weil eine Familie = eine Farbe = evtl. mehrere Personen. */
+function tripDates() {
+  if (!state.tripDates || typeof state.tripDates !== 'object') state.tripDates = {};
+  return state.tripDates;
+}
+
+function familyDates(color) {
+  const d = tripDates()[colorKey(color)];
+  if (!d || !d.from || !d.to) return null;
+  return { from: d.from, to: d.to };
+}
+
+function parseDay(s) {
+  const d = new Date(s + 'T00:00:00');
+  return isNaN(d) ? null : d;
+}
+
+/* Anzahl Tage inkl. Anreise- und Abreisetag */
+function daysBetween(from, to) {
+  const a = parseDay(from), b = parseDay(to);
+  if (!a || !b) return null;
+  return Math.round((b - a) / 86400000) + 1;
+}
+
+function fmtDay(s) {
+  const d = parseDay(s);
+  if (!d) return '–';
+  return d.getDate() + '.' + (d.getMonth() + 1) + '.';
+}
+
+/* Familien mit eingetragenen Daten, in Farb-Reihenfolge der Crew */
+function familiesWithDates() {
+  return familyColors().map(c => {
+    const names = (state.members || []).filter(m => colorKey(m.color) === colorKey(c)).map(m => m.name);
+    return { color: c, names, dates: familyDates(c) };
+  });
+}
+
+/* Gesamtfenster der Reise: früheste Anreise bis späteste Abreise.
+   Fällt auf departureDate + 14 Tage zurück, solange nichts eingetragen ist. */
+function tripSpan() {
+  const all = familiesWithDates().filter(f => f.dates);
+  if (!all.length) {
+    const from = state.departureDate || '2026-09-05';
+    const d = parseDay(from) || new Date('2026-09-05T00:00:00');
+    const end = new Date(d); end.setDate(end.getDate() + 13);
+    return { from, to: end.toISOString().slice(0,10), days: 14 };
+  }
+  let from = all[0].dates.from, to = all[0].dates.to;
+  all.forEach(f => {
+    if (f.dates.from < from) from = f.dates.from;
+    if (f.dates.to > to) to = f.dates.to;
+  });
+  return { from, to, days: daysBetween(from, to) };
+}
+
+/* Zeitfenster, in dem ALLE gleichzeitig da sind (Schnittmenge) */
+function overlapWindow() {
+  const all = familiesWithDates().filter(f => f.dates);
+  if (all.length < 2) return null;
+  let from = all[0].dates.from, to = all[0].dates.to;
+  all.forEach(f => {
+    if (f.dates.from > from) from = f.dates.from;
+    if (f.dates.to < to) to = f.dates.to;
+  });
+  if (parseDay(from) > parseDay(to)) return { from, to, days: 0 };
+  return { from, to, days: daysBetween(from, to) };
+}
+
 function renderHero() {
-  const dep = new Date(state.departureDate);
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  const diff = Math.ceil((dep - today) / (1000 * 60 * 60 * 24));
+  const myColor = me ? me.color : null;
+  const mine = myColor ? familyDates(myColor) : null;
+
+  // Kacheln: eigene Daten + Dauer
+  const dv = document.getElementById('myDates');
+  const du = document.getElementById('myDuration');
+  if (dv) dv.textContent = mine ? fmtDay(mine.from) + '–' + fmtDay(mine.to) : 'offen';
+  if (du) {
+    const n = mine ? daysBetween(mine.from, mine.to) : null;
+    du.textContent = n ? n + (n === 1 ? ' Tag' : ' Tage') : '–';
+  }
+
+  // Countdown auf die eigene Anreise
   const cd = document.getElementById('countdown');
-  if (cd) cd.textContent = diff > 0 ? diff + ' Tage' : (diff === 0 ? 'Heute!' : 'unterwegs');
-  const cc = document.getElementById('crewCount');
-  if (cc) cc.textContent = (state.members || []).length;
+  if (cd) {
+    if (!mine) {
+      cd.textContent = '–';
+    } else {
+      const today = new Date(); today.setHours(0,0,0,0);
+      const from = parseDay(mine.from), to = parseDay(mine.to);
+      const diff = Math.ceil((from - today) / 86400000);
+      cd.textContent = diff > 0 ? diff + (diff === 1 ? ' Tag' : ' Tage')
+                     : (diff === 0 ? 'Heute!' : (today <= to ? 'unterwegs' : 'vorbei'));
+    }
+  }
+
+  // Überlappung aller Familien
+  const ov = document.getElementById('overlapVal');
+  if (ov) {
+    const w = overlapWindow();
+    ov.textContent = !w ? '–' : (w.days > 0 ? w.days + (w.days === 1 ? ' Tag' : ' Tage') : 'keine Überlappung');
+    ov.title = w && w.days > 0 ? fmtDay(w.from) + '–' + fmtDay(w.to) : '';
+  }
+
+  renderDateEditor();
+  renderTripOverview();
   renderCrewList();
+}
+
+function renderDateEditor() {
+  const from = document.getElementById('myFrom');
+  const to   = document.getElementById('myTo');
+  const hint = document.getElementById('dateHint');
+  if (!from || !to || !me) return;
+
+  const mine = familyDates(me.color);
+  if (document.activeElement !== from) from.value = mine ? mine.from : '';
+  if (document.activeElement !== to)   to.value   = mine ? mine.to   : '';
+
+  from.onchange = to.onchange = () => {
+    const f = from.value, t = to.value;
+    if (!f || !t) { if (hint) hint.textContent = 'Bitte beide Daten setzen.'; return; }
+    if (parseDay(f) > parseDay(t)) {
+      if (hint) hint.textContent = 'Die Abreise liegt vor der Anreise — bitte prüfen.';
+      return;
+    }
+    tripDates()[colorKey(me.color)] = { from: f, to: t };
+    if (hint) hint.textContent = '';
+    saveState();
+    renderHero();
+  };
+
+  if (hint) {
+    if (tripDatesBlocked) {
+      hint.textContent = 'Gespeichert, aber nur auf diesem Gerät — die Firebase-Rules müssen noch für Reisedaten freigegeben werden.';
+    } else if (!mine) {
+      hint.textContent = 'Noch nicht eingetragen — die Kacheln oben füllen sich, sobald beide Daten stehen.';
+    }
+  }
+}
+
+function renderTripOverview() {
+  const wrap = document.getElementById('tripOverview');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  const fams = familiesWithDates();
+  if (!fams.length) {
+    wrap.innerHTML = '<div class="crew-empty">Noch keine Familie angemeldet</div>';
+    return;
+  }
+  fams.forEach(f => {
+    const n = f.dates ? daysBetween(f.dates.from, f.dates.to) : null;
+    const row = document.createElement('div');
+    row.className = 'trip-row';
+    row.innerHTML = `
+      <span class="dot" style="background:${safeColor(f.color)}"></span>
+      <span class="trip-names">${escapeHtml(f.names.join(', ') || 'Familie')}</span>
+      <span class="trip-span">${f.dates ? escapeHtml(fmtDay(f.dates.from) + '–' + fmtDay(f.dates.to)) : 'noch offen'}</span>
+      <span class="trip-days">${n ? n + (n === 1 ? ' Tag' : ' Tage') : ''}</span>
+    `;
+    wrap.appendChild(row);
+  });
+  const w = overlapWindow();
+  if (w) {
+    const foot = document.createElement('div');
+    foot.className = 'trip-foot';
+    foot.textContent = w.days > 0
+      ? `Alle gleichzeitig da: ${fmtDay(w.from)}–${fmtDay(w.to)} (${w.days} ${w.days === 1 ? 'Tag' : 'Tage'})`
+      : 'Achtung: es gibt keinen Tag, an dem alle gleichzeitig da sind.';
+    wrap.appendChild(foot);
+  }
 }
 
 function renderCrewList() {
   const list = document.getElementById('crewList');
   if (!list) return;
+  // Der ganze Verwaltungsbereich ist nur für den Admin sichtbar
+  const wrap = document.getElementById('adminCrewWrap');
+  if (wrap) wrap.style.display = isAdmin() ? '' : 'none';
+  if (!isAdmin()) { list.innerHTML = ''; return; }
   list.innerHTML = '';
   const members = state.members || [];
   if (!members.length) {
@@ -1888,8 +2231,8 @@ function renderCrewList() {
    Sobald du deine eigene ID kennst, hier fest eintragen — dann bleibt der
    Admin-Status auch erhalten, wenn sich die Reihenfolge der Crew ändert.
    Deine ID findest du in der Browser-Konsole mit:
-     JSON.parse(localStorage.getItem('sardinien_user_v1')).id            */
-const ADMIN_ID = '';
+     JSON.parse(localStorage.getItem('sardinien-app-user')).id           */
+const ADMIN_ID = 'u_7oozlgem';   // Michèle
 
 function adminId() {
   if (ADMIN_ID) return ADMIN_ID;
@@ -2081,6 +2424,7 @@ function renderSharedPackItems(filter) {
     if (filter !== 'alle' && g.group !== filter) return;
     const groupDiv = document.createElement('div');
     groupDiv.className = 'group';
+    g.items = g.items || [];
     const total = g.items.length;
     const done = g.items.filter(i => i.done).length;
     groupDiv.innerHTML = `<div class="group-title">${escapeHtml(g.group)} <span class="pill">${done}/${total}</span></div>`;
@@ -2199,7 +2543,7 @@ function renderPersonalPackItems(color, filter) {
   const c = document.getElementById('packPersonalContainer');
   c.innerHTML = '';
 
-  const totalItems = groups.reduce((s, g) => s + g.items.length, 0);
+  const totalItems = groups.reduce((s, g) => s + (g.items || []).length, 0);
   if (totalItems === 0) {
     c.innerHTML = '<p style="color: var(--text-muted); font-size: 14px; padding: 12px 0;">Noch keine Items. Unten ergänzen — z. B. Bademode, Lieblings-Hörbuch, individuelle Medikamente.</p>';
     return;
@@ -2209,6 +2553,7 @@ function renderPersonalPackItems(color, filter) {
     if (filter !== 'alle' && g.group !== filter) return;
     const groupDiv = document.createElement('div');
     groupDiv.className = 'group';
+    g.items = g.items || [];
     const total = g.items.length;
     const done = g.items.filter(i => i.done).length;
     groupDiv.innerHTML = `<div class="group-title">${escapeHtml(g.group)} <span class="pill">${done}/${total}</span></div>`;
@@ -2253,6 +2598,7 @@ function addPackItem() {
   if (!text) return;
   const g = state.pack.find(g => g.group === groupName);
   if (!g) return;
+  g.items = g.items || [];
   g.items.push({ id: uid(), text, who: 'open', done: false });
   input.value = '';
   saveState();
@@ -2269,6 +2615,7 @@ function addPersonalItem() {
   const groups = ensurePersonalPack(color);
   const g = groups.find(g => g.group === groupName);
   if (!g) return;
+  g.items = g.items || [];
   g.items.push({ id: uid(), text, done: false });
   input.value = '';
   saveState();
@@ -2310,7 +2657,7 @@ async function addCategory(scope) {
 
 function resetPacklist() {
   if (!confirm('Wirklich alle Häkchen in der gemeinsamen Liste zurücksetzen?')) return;
-  state.pack.forEach(g => g.items.forEach(i => i.done = false));
+  state.pack.forEach(g => (g.items || []).forEach(i => i.done = false));
   saveState();
   renderSharedPack();
 }
@@ -2319,7 +2666,7 @@ function resetPersonal() {
   if (activePackTab === 'shared' || !activePackTab.startsWith('color:')) return;
   const color = activePackTab.slice(6);
   if (!confirm('Häkchen dieser Familienliste zurücksetzen?')) return;
-  ensurePersonalPack(color).forEach(g => g.items.forEach(i => i.done = false));
+  ensurePersonalPack(color).forEach(g => (g.items || []).forEach(i => i.done = false));
   saveState();
   renderPersonalPack(color);
 }
@@ -2371,6 +2718,7 @@ function renderShoppingItems(filter) {
     if (filter !== 'alle' && g.group !== filter) return;
     const groupDiv = document.createElement('div');
     groupDiv.className = 'group';
+    g.items = g.items || [];
     const total = g.items.length;
     const done = g.items.filter(i => i.done).length;
     groupDiv.innerHTML = `<div class="group-title">${escapeHtml(g.group)} <span class="pill">${done}/${total}</span></div>`;
@@ -2404,6 +2752,7 @@ function addShopItem() {
   if (!text) return;
   const g = state.shop.find(g => g.group === groupName);
   if (!g) return;
+  g.items = g.items || [];
   g.items.push({ id: uid(), text, done: false });
   input.value = '';
   saveState();
@@ -2412,7 +2761,7 @@ function addShopItem() {
 
 function resetShopping() {
   if (!confirm('Wirklich alle Häkchen zurücksetzen?')) return;
-  state.shop.forEach(g => g.items.forEach(i => i.done = false));
+  state.shop.forEach(g => (g.items || []).forEach(i => i.done = false));
   saveState();
   renderShopping();
 }
@@ -2466,9 +2815,10 @@ function addExcursion() {
 function renderMeals() {
   const grid = document.getElementById('mealGrid');
   grid.innerHTML = '';
-  const start = new Date(state.departureDate);
+  const span = tripSpan();
+  const start = parseDay(span.from);
   const choices = allChoices();
-  for (let i = 0; i < 14; i++) {
+  for (let i = 0; i < span.days; i++) {
     const d = new Date(start);
     d.setDate(d.getDate() + i);
     const key = d.toISOString().slice(0,10);
@@ -2508,8 +2858,9 @@ function rotateMeals() {
     if (!confirm('Bestehende Einträge überschreiben?')) return;
   }
   state.meals = [];
-  const start = new Date(state.departureDate);
-  for (let i = 0; i < 14; i++) {
+  const span = tripSpan();
+  const start = parseDay(span.from);
+  for (let i = 0; i < span.days; i++) {
     const d = new Date(start);
     d.setDate(d.getDate() + i);
     state.meals.push({ date: d.toISOString().slice(0,10), family: members[i % members.length].id, dish: '' });
