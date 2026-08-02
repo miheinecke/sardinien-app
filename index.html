@@ -958,6 +958,85 @@
     padding: 4px 6px;
   }
   .user-pill button:hover { color: var(--danger); }
+
+  /* Modal dialog (replacement for prompt/confirm on PWAs) */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(45, 49, 66, 0.55);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    animation: modalFade .15s ease-out;
+  }
+  @keyframes modalFade { from { opacity: 0; } to { opacity: 1; } }
+  .modal-box {
+    background: var(--surface);
+    border-radius: var(--r-lg);
+    padding: 22px 22px 18px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: var(--shadow-deep);
+    animation: modalPop .18s ease-out;
+  }
+  @keyframes modalPop { from { transform: scale(0.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .modal-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .modal-box input[type="text"] {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: var(--r-sm);
+    border: 1.5px solid var(--border);
+    font-size: 15px;
+    font-family: inherit;
+    background: var(--surface);
+    color: var(--text);
+    box-sizing: border-box;
+  }
+  .modal-box input:focus {
+    outline: none;
+    border-color: var(--primary-mid);
+    box-shadow: 0 0 0 3px rgba(94, 113, 134, 0.18);
+  }
+  .modal-message {
+    color: var(--text-soft);
+    font-size: 14px;
+    line-height: 1.5;
+    margin-top: 4px;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 18px;
+  }
+  .modal-btn {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 10px 18px;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-soft);
+    font-family: inherit;
+  }
+  .modal-btn:hover { background: var(--surface-3); color: var(--text); }
+  .modal-btn.primary {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+  .modal-btn.primary:hover { background: var(--primary-ink); color: white; }
+  .modal-btn.danger.primary { background: var(--danger); border-color: var(--danger); }
+  .modal-btn.danger.primary:hover { background: #8b4930; }
 </style>
 </head>
 <body>
@@ -1034,7 +1113,7 @@
   <section class="view active" id="view-uebersicht">
     <div class="card dashboard-card">
       <h2>🌿 Übersicht</h2>
-      <p class="sub">Eure Reise auf einen Blick. Unten: Crew, mit Möglichkeit umzubenennen oder zu entfernen.</p>
+      <p class="sub">Eure Reise auf einen Blick. Unten die Crew — jede/r kann den eigenen Namen ändern, entfernen kann nur Michèle.</p>
 
       <div class="dashboard-grid">
         <div class="dash-tile">
@@ -1064,7 +1143,7 @@
   <section class="view" id="view-packliste">
     <div class="card">
       <h2 id="packHeading">🎒 Packliste</h2>
-      <p class="sub" id="packSub">Gemeinsame Sachen + persönlicher Kram pro Person.</p>
+      <p class="sub" id="packSub">Gemeinsame Sachen + persönlicher Kram pro Familie.</p>
 
       <!-- Member tabs -->
       <div class="subtabs member-tabs" id="packMemberTabs"></div>
@@ -1109,7 +1188,7 @@
   <section class="view" id="view-einkaufen">
     <div class="card">
       <h2>🛒 Einkaufsliste vor Ort</h2>
-      <p class="sub">Was holen wir vor Ort?</p>
+      <p class="sub">Was holen wir vor Ort? Vorbefüllt mit Sardinien-Klassikern. Erweiterbar.</p>
       <div class="subtabs" id="shopSubtabs">
         <button class="subtab active" data-group="alle">Alle</button>
       </div>
@@ -1160,8 +1239,8 @@
   <!-- VIEW: Ausflüge -->
   <section class="view" id="view-ausfluege">
     <div class="card">
-      <h2>🏖️ Ein paar Ausflugs-Ideen</h2>
-      <p class="sub">Sortiert nach Region. Karten-Links öffnen Google Maps.</p>
+      <h2>🏖️ Bucket-List — Was wir nicht verpassen sollten</h2>
+      <p class="sub">Mein Vorschlag, sortiert nach Region. Abhaken, was ihr machen wollt. Karten-Links öffnen Google Maps.</p>
       <div class="excursion-grid" id="excursionGrid"></div>
       <div class="add-row" style="margin-top:18px;">
         <input type="text" id="newExcursion" placeholder="Eigener Vorschlag …" maxlength="60" />
@@ -1174,7 +1253,7 @@
   <section class="view" id="view-essen">
     <div class="card">
       <h2>🍝 Mahlzeitenplan — Wer kocht wann?</h2>
-      <p class="sub">Ideen sind gerne willkommen :-)</p>
+      <p class="sub">Bei 2 Wochen mit 9 Personen ist Rotation gold wert. Trag die Familie und die Idee pro Tag ein.</p>
       <div class="meal-grid" id="mealGrid"></div>
       <div class="toolbar">
         <button onclick="rotateMeals()" class="ghost-btn">Automatische Rotation vorbelegen</button>
@@ -1187,7 +1266,7 @@
   <section class="view" id="view-kasse">
     <div class="card">
       <h2>💶 Gemeinsame Kasse</h2>
-      <p class="sub">Wer bezahlt was für alle?</p>
+      <p class="sub">Wer bezahlt was für alle? Am Ende der Reise einmal ausgleichen. Splitwise-light.</p>
 
       <div class="expense-summary" id="expenseSummary"></div>
 
@@ -1340,6 +1419,19 @@
 
 </div>
 
+<!-- Custom Modal (replaces prompt/confirm) -->
+<div class="modal-backdrop" id="modalBackdrop" style="display:none;">
+  <div class="modal-box" role="dialog" aria-modal="true">
+    <div class="modal-title" id="modalTitle">…</div>
+    <input type="text" id="modalInput" maxlength="30" autocomplete="off" />
+    <div class="modal-message" id="modalMessage" style="display:none;"></div>
+    <div class="modal-actions">
+      <button class="modal-btn" id="modalCancel">Abbrechen</button>
+      <button class="modal-btn primary" id="modalOk">OK</button>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ========================================================================
    SARDINIEN APP — FIREBASE CONFIG, GATE, SYNC
@@ -1444,16 +1536,10 @@ function logout() {
   location.reload();
 }
 
-function removeMe() {
-  if (!confirm('Dein Profil aus der Crew entfernen?')) return;
-  state.members = (state.members || []).filter(m => m.id !== me.id);
-  // Reassign anything assigned to me back to 'open'
-  state.pack.forEach(g => g.items.forEach(i => { if (i.who === me.id) i.who = 'open'; }));
-  state.meals.forEach(m => { if (m.family === me.id) m.family = 'open'; });
-  queueSync();
-  localStorage.removeItem(USER_KEY);
-  location.reload();
-}
+/* removeMe() entfernt — war an keinen Button gebunden und hätte die
+   Regel «nur Michèle entfernt Mitglieder» umgehen können.
+   Wer aussteigen will: «Abmelden» (Profil bleibt in der Crew) oder
+   Michèle bitten, die Zeile zu entfernen. */
 
 /* ====== STATE ====== */
 
@@ -1774,27 +1860,63 @@ function renderCrewList() {
     list.innerHTML = '<div class="crew-empty">Noch keine Crew angemeldet</div>';
     return;
   }
-  members.forEach(m => {
+  const admin = isAdmin();
+  const aid = adminId();
+  members.forEach((m) => {
+    const isMe = me && m.id === me.id;
+    const canRename = admin || isMe;          // sich selbst umbenennen darf jede/r
+    const canRemove = admin;                  // entfernen darf NUR der Admin
+    const isAdminRow = aid && m.id === aid;
     const row = document.createElement('div');
-    row.className = 'crew-row-item' + (me && m.id === me.id ? ' me-row' : '');
+    row.className = 'crew-row-item' + (isMe ? ' me-row' : '');
     row.innerHTML = `
       <span class="dot" style="background:${safeColor(m.color)}"></span>
-      <span class="name">${escapeHtml(m.name)}${me && m.id === me.id ? '<span class="me-tag">· du</span>' : ''}</span>
-      <button class="crew-btn" data-act="rename">Umbenennen</button>
-      <button class="crew-btn danger" data-act="remove">Entfernen</button>
+      <span class="name">${escapeHtml(m.name)}${isMe ? '<span class="me-tag">· du</span>' : ''}${isAdminRow ? '<span class="me-tag" title="Admin">· Admin</span>' : ''}</span>
+      ${canRename ? `<button class="crew-btn" data-act="rename">Umbenennen</button>` : ''}
+      ${canRemove ? `<button class="crew-btn danger" data-act="remove">Entfernen</button>` : ''}
     `;
-    row.querySelector('[data-act="rename"]').onclick = () => renameMember(m.id);
-    row.querySelector('[data-act="remove"]').onclick = () => removeMember(m.id);
+    const rn = row.querySelector('[data-act="rename"]');
+    if (rn) rn.onclick = () => renameMember(m.id);
+    const rm = row.querySelector('[data-act="remove"]');
+    if (rm) rm.onclick = () => removeMember(m.id);
     list.appendChild(row);
   });
 }
 
-function renameMember(id) {
+/* Admin-Identität.
+   ADMIN_ID leer lassen = die zuerst angemeldete Person (members[0]) ist Admin.
+   Sobald du deine eigene ID kennst, hier fest eintragen — dann bleibt der
+   Admin-Status auch erhalten, wenn sich die Reihenfolge der Crew ändert.
+   Deine ID findest du in der Browser-Konsole mit:
+     JSON.parse(localStorage.getItem('sardinien_user_v1')).id            */
+const ADMIN_ID = '';
+
+function adminId() {
+  if (ADMIN_ID) return ADMIN_ID;
+  return (state.members && state.members[0] && state.members[0].id) || null;
+}
+
+function isAdmin() {
+  return !!(me && adminId() && adminId() === me.id);
+}
+
+/* Umbenennen: Admin darf alle, alle anderen nur sich selbst. */
+function canEditMember(id) {
+  return isAdmin() || !!(me && me.id === id);
+}
+
+/* Entfernen: ausschliesslich der Admin — auch nicht die eigene Zeile. */
+function canRemoveMember(id) {
+  return isAdmin();
+}
+
+async function renameMember(id) {
+  if (!canEditMember(id)) return;
   const m = (state.members || []).find(x => x.id === id);
   if (!m) return;
-  let newName = prompt(`«${m.name}» umbenennen in:`, m.name);
-  if (newName == null) return;
-  newName = newName.trim().slice(0, 24);
+  const raw = await askText(`«${m.name}» umbenennen in:`, m.name);
+  if (raw == null) return;
+  const newName = raw.trim().slice(0, 24);
   if (!newName || newName === m.name) return;
   m.name = newName;
   if (me && me.id === id) {
@@ -1807,17 +1929,24 @@ function renameMember(id) {
   renderAll();
 }
 
-function removeMember(id) {
+async function removeMember(id) {
+  if (!canRemoveMember(id)) {
+    await askConfirm('Nur Michèle kann Mitglieder aus der Crew entfernen. Wenn du raus willst: melde dich ab oder frag Michèle.', {
+      title: 'Nicht erlaubt', confirmLabel: 'OK', cancelLabel: ''
+    });
+    return;
+  }
   const m = (state.members || []).find(x => x.id === id);
   if (!m) return;
   const isSelf = me && me.id === id;
   const label = isSelf ? 'dich selbst' : `«${m.name}»`;
-  if (!confirm(`Wirklich ${label} aus der Crew entfernen? Zuweisungen werden auf «noch offen» gesetzt.`)) return;
+  const ok = await askConfirm(`Wirklich ${label} aus der Crew entfernen? Zuweisungen werden auf «noch offen» gesetzt.`, {
+    title: 'Entfernen?', confirmLabel: 'Entfernen', danger: true
+  });
+  if (!ok) return;
   state.members = (state.members || []).filter(x => x.id !== id);
-  // Cleanup assignments
   (state.pack || []).forEach(g => (g.items || []).forEach(i => { if (i.who === id) i.who = 'open'; }));
   (state.meals || []).forEach(meal => { if (meal.family === id) meal.family = 'open'; });
-  // expenses: keep historical record but tag who as missing — we leave the id, getMember falls back to OPEN_MEMBER
   saveState();
   if (isSelf) {
     localStorage.removeItem(USER_KEY);
@@ -1907,7 +2036,7 @@ function renderPacklist() {
     heading.innerHTML = `🎒 Packliste — ${escapeHtml(label)}`;
     subText.textContent = isMine
       ? 'Eure Familienliste. Alle aus eurer Farbe sehen und ändern dasselbe.'
-      : `Persönlicher Kram von ${escapeHtml(label)}.`;
+      : `Persönlicher Kram der Familie ${escapeHtml(label)}.`;
     renderPersonalPack(color);
   }
 }
@@ -2146,22 +2275,22 @@ function addPersonalItem() {
   renderPersonalPack(color);
 }
 
-function addCategory(scope) {
-  let name = prompt('Name der neuen Kategorie?');
-  if (!name) return;
-  name = name.trim().slice(0, 30);
+async function addCategory(scope) {
+  const raw = await askText('Name der neuen Kategorie?');
+  if (raw == null) return;
+  const name = raw.trim().slice(0, 30);
   if (!name) return;
 
   if (scope === 'shared') {
     if (state.pack.some(g => g.group.toLowerCase() === name.toLowerCase())) {
-      alert('Kategorie gibt es schon.'); return;
+      await askConfirm('Kategorie gibt es schon.', { title: 'Duplikat', confirmLabel: 'OK', cancelLabel: '' }); return;
     }
     state.pack.push({ group: name, items: [] });
     saveState();
     renderSharedPack();
   } else if (scope === 'shop') {
     if (state.shop.some(g => g.group.toLowerCase() === name.toLowerCase())) {
-      alert('Kategorie gibt es schon.'); return;
+      await askConfirm('Kategorie gibt es schon.', { title: 'Duplikat', confirmLabel: 'OK', cancelLabel: '' }); return;
     }
     state.shop.push({ group: name, items: [] });
     saveState();
@@ -2171,7 +2300,7 @@ function addCategory(scope) {
     const color = activePackTab.slice(6);
     const groups = ensurePersonalPack(color);
     if (groups.some(g => g.group.toLowerCase() === name.toLowerCase())) {
-      alert('Kategorie gibt es schon.'); return;
+      await askConfirm('Kategorie gibt es schon.', { title: 'Duplikat', confirmLabel: 'OK', cancelLabel: '' }); return;
     }
     groups.push({ group: name, items: [] });
     saveState();
@@ -2546,6 +2675,133 @@ function importData(e) {
 }
 
 /* ====== UTILS ====== */
+
+/* ====== MODAL DIALOGS (replace prompt/confirm) ====== */
+
+let _modalCleanup    = null;
+let _modalGuardUntil = 0;      // Klicks vor diesem Zeitpunkt dürfen nicht schliessen
+let _modalDownOnBd   = false;  // hat die Geste auf dem Backdrop begonnen?
+let _modalKeyHandler = null;
+
+/* Öffnet den Dialog und setzt ein kurzes Schutzfenster.
+   Grund: iOS/Safari kann den click des öffnenden Taps auf das gerade
+   eingeblendete Backdrop umleiten ("Ghost-Click") — der Dialog ploppte
+   dadurch auf und war sofort wieder weg. */
+function _modalShow(bd) {
+  _modalGuardUntil = Date.now() + 450;
+  _modalDownOnBd   = false;
+  bd.style.display = '';
+}
+
+/* Backdrop schliesst nur, wenn die Geste dort begonnen UND geendet hat
+   und das Schutzfenster vorbei ist. */
+function _modalWireBackdrop(bd, onDismiss) {
+  bd.onpointerdown = (e) => { _modalDownOnBd = (e.target === bd); };
+  bd.onmousedown   = (e) => { if (e.type === 'mousedown' && !window.PointerEvent) _modalDownOnBd = (e.target === bd); };
+  bd.onclick = (e) => {
+    if (e.target !== bd) return;
+    if (Date.now() < _modalGuardUntil) return;
+    if (!_modalDownOnBd) return;
+    onDismiss();
+  };
+}
+
+function _modalHide(bd, ok, cnl, inp) {
+  bd.style.display = 'none';
+  ok.onclick = null; cnl.onclick = null;
+  bd.onclick = null; bd.onpointerdown = null; bd.onmousedown = null;
+  inp.onkeydown = null;
+  inp.style.display = '';                 // für den nächsten askText zurücksetzen
+  if (_modalKeyHandler) {
+    document.removeEventListener('keydown', _modalKeyHandler, true);
+    _modalKeyHandler = null;
+  }
+}
+
+function _modalEls() {
+  return {
+    bd:  document.getElementById('modalBackdrop'),
+    ttl: document.getElementById('modalTitle'),
+    inp: document.getElementById('modalInput'),
+    msg: document.getElementById('modalMessage'),
+    ok:  document.getElementById('modalOk'),
+    cnl: document.getElementById('modalCancel')
+  };
+}
+
+function askText(question, defaultValue) {
+  return new Promise(resolve => {
+    if (_modalCleanup) _modalCleanup(null);
+    const { bd, ttl, inp, msg, ok, cnl } = _modalEls();
+
+    ttl.textContent = question;
+    inp.style.display = '';
+    inp.value = defaultValue || '';
+    msg.style.display = 'none';
+    ok.textContent = 'OK';
+    ok.className = 'modal-btn primary';
+    cnl.textContent = 'Abbrechen';
+    cnl.style.display = '';
+    _modalShow(bd);
+
+    setTimeout(() => { try { inp.focus(); inp.select(); } catch(e){} }, 60);
+
+    function done(result) {
+      _modalCleanup = null;
+      _modalHide(bd, ok, cnl, inp);
+      resolve(result);
+    }
+    _modalCleanup = done;
+    ok.onclick  = (e) => { if (e) e.stopPropagation(); done(inp.value); };
+    cnl.onclick = (e) => { if (e) e.stopPropagation(); done(null); };
+    _modalWireBackdrop(bd, () => done(null));
+
+    _modalKeyHandler = (e) => {
+      if (e.key === 'Enter')       { e.preventDefault(); e.stopPropagation(); done(inp.value); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); done(null); }
+    };
+    document.addEventListener('keydown', _modalKeyHandler, true);
+  });
+}
+
+function askConfirm(message, opts) {
+  opts = opts || {};
+  return new Promise(resolve => {
+    if (_modalCleanup) _modalCleanup(false);
+    const { bd, ttl, inp, msg, ok, cnl } = _modalEls();
+
+    ttl.textContent = opts.title || 'Sicher?';
+    inp.style.display = 'none';
+    msg.textContent = message;
+    msg.style.display = '';
+    ok.textContent = opts.confirmLabel || 'Ja';
+    ok.className = 'modal-btn primary' + (opts.danger ? ' danger' : '');
+    // cancelLabel: '' bedeutet "kein Abbrechen-Button" (reine Hinweis-Meldung)
+    const hideCancel = opts.cancelLabel === '';
+    cnl.textContent = opts.cancelLabel || 'Abbrechen';
+    cnl.style.display = hideCancel ? 'none' : '';
+    _modalShow(bd);
+
+    setTimeout(() => { try { ok.focus(); } catch(e){} }, 60);
+
+    function done(result) {
+      _modalCleanup = null;
+      _modalHide(bd, ok, cnl, inp);
+      cnl.style.display = '';
+      resolve(result);
+    }
+    _modalCleanup = done;
+    ok.onclick  = (e) => { if (e) e.stopPropagation(); done(true); };
+    cnl.onclick = (e) => { if (e) e.stopPropagation(); done(false); };
+    _modalWireBackdrop(bd, () => done(hideCancel ? true : false));
+
+    _modalKeyHandler = (e) => {
+      if (e.key === 'Enter')       { e.preventDefault(); e.stopPropagation(); done(true); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); done(hideCancel ? true : false); }
+    };
+    document.addEventListener('keydown', _modalKeyHandler, true);
+  });
+}
 
 function escapeHtml(s) {
   if (s == null) return '';

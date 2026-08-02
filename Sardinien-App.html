@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://*.firebaseio.com https://*.firebasedatabase.app wss://*.firebaseio.com wss://*.firebasedatabase.app https://www.gstatic.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';" />
+<meta name="referrer" content="strict-origin-when-cross-origin" />
 <title>Sardinien 2026 — Unsere App</title>
 
 <!-- PWA / Home-Screen -->
@@ -109,6 +111,108 @@
     margin-left: 2px;
   }
   .hero p { margin: 0; opacity: 0.78; max-width: 720px; font-size: 14.5px; color: #e2e8f0; }
+  .hero.hero-slim {
+    padding: 22px 28px 20px;
+  }
+  .hero.hero-slim h1 { margin-bottom: 0; }
+
+  /* Dashboard */
+  .card.dashboard-card {
+    background: linear-gradient(160deg, #b9c8b1 0%, #97a98e 60%, #82967b 100%);
+    color: #1c2a1f;
+    border: none;
+    box-shadow: 0 1px 3px rgba(45, 49, 66, 0.08), 0 12px 36px -10px rgba(75, 100, 70, 0.30);
+  }
+  .card.dashboard-card h2 { color: #1c2a1f; }
+  .card.dashboard-card .sub { color: rgba(28, 42, 31, 0.72); }
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+  .dash-tile {
+    background: rgba(255, 255, 255, 0.42);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: var(--r-md);
+    padding: 12px 14px;
+  }
+  .dash-tile .d-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(28, 42, 31, 0.65);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .dash-tile .d-val {
+    font-size: 21px;
+    font-weight: 700;
+    color: #1c2a1f;
+  }
+  .dash-subhead {
+    margin: 4px 0 10px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: rgba(28, 42, 31, 0.7);
+    font-weight: 700;
+  }
+  .crew-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .crew-row-item {
+    background: rgba(255, 255, 255, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: var(--r-md);
+    padding: 10px 12px 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .crew-row-item.me-row {
+    background: rgba(255, 255, 255, 0.85);
+    border-color: rgba(255, 255, 255, 0.95);
+  }
+  .crew-row-item .dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.6);
+  }
+  .crew-row-item .name {
+    flex: 1;
+    font-weight: 600;
+    color: #1c2a1f;
+    font-size: 15px;
+  }
+  .crew-row-item .me-tag {
+    font-size: 11px;
+    color: rgba(28, 42, 31, 0.6);
+    font-weight: 500;
+    margin-left: 6px;
+  }
+  .crew-row-item .crew-btn {
+    background: transparent;
+    border: 1px solid rgba(28, 42, 31, 0.18);
+    padding: 5px 10px;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(28, 42, 31, 0.78);
+  }
+  .crew-row-item .crew-btn:hover { background: rgba(255,255,255,0.5); color: #1c2a1f; }
+  .crew-row-item .crew-btn.danger { color: var(--danger); border-color: rgba(168, 92, 61, 0.35); }
+  .crew-row-item .crew-btn.danger:hover { background: rgba(168, 92, 61, 0.10); }
+  .crew-empty {
+    color: rgba(28, 42, 31, 0.6);
+    font-size: 14px;
+    padding: 8px 0;
+    font-style: italic;
+  }
 
   .hero-meta {
     display: grid;
@@ -331,12 +435,14 @@
   /* Add row */
   .add-row {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     margin-top: 14px;
   }
   .add-row input, .add-row select {
-    flex: 1;
-    padding: 10px 14px;
+    flex: 1 1 160px;
+    min-width: 0;
+    padding: 11px 14px;
     border-radius: var(--r-sm);
     border: 1px solid var(--border);
     font-size: 14px;
@@ -353,14 +459,19 @@
     background: var(--primary);
     color: white;
     border: none;
-    padding: 0 18px;
+    padding: 11px 20px;
     border-radius: var(--r-sm);
     cursor: pointer;
     font-weight: 700;
     font-size: 14px;
+    flex: 0 0 auto;
     transition: background .12s ease;
   }
   .add-row button:hover { background: var(--primary-ink); }
+  @media (max-width: 560px) {
+    .add-row input, .add-row select { flex: 1 1 100%; }
+    .add-row button { flex: 1 1 100%; padding: 12px 20px; }
+  }
 
   /* Stats / Tiles (Wetter section) */
   .tile-grid {
@@ -376,11 +487,11 @@
   }
   .tile .t-label { font-size: 11px; opacity: 0.82; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 600; }
   .tile .t-val { font-size: 26px; font-weight: 800; margin-top: 4px; }
-  .tile.t-sea    { background: linear-gradient(135deg, #0e7490, #155e75); }
-  .tile.t-sun    { background: linear-gradient(135deg, #c2410c, #9a3412); }
-  .tile.t-night  { background: linear-gradient(135deg, #312e81, #1e1b4b); }
-  .tile.t-rain   { background: linear-gradient(135deg, #475569, #334155); }
-  .tile.t-wind   { background: linear-gradient(135deg, #1e40af, #1e3a8a); }
+  .tile.t-sea    { background: linear-gradient(135deg, #5e7186, #455567); }   /* slate blue */
+  .tile.t-sun    { background: linear-gradient(135deg, #c97b56, #a85c3d); }   /* terracotta */
+  .tile.t-night  { background: linear-gradient(135deg, #3b4a5f, #2a3445); }   /* deep slate */
+  .tile.t-rain   { background: linear-gradient(135deg, #8c9499, #6b7480); }   /* cool grey */
+  .tile.t-wind   { background: linear-gradient(135deg, #97a98e, #768c70); }   /* sage */
 
   /* Weather table */
   .wtable { width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -847,6 +958,85 @@
     padding: 4px 6px;
   }
   .user-pill button:hover { color: var(--danger); }
+
+  /* Modal dialog (replacement for prompt/confirm on PWAs) */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(45, 49, 66, 0.55);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    animation: modalFade .15s ease-out;
+  }
+  @keyframes modalFade { from { opacity: 0; } to { opacity: 1; } }
+  .modal-box {
+    background: var(--surface);
+    border-radius: var(--r-lg);
+    padding: 22px 22px 18px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: var(--shadow-deep);
+    animation: modalPop .18s ease-out;
+  }
+  @keyframes modalPop { from { transform: scale(0.94); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .modal-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .modal-box input[type="text"] {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: var(--r-sm);
+    border: 1.5px solid var(--border);
+    font-size: 15px;
+    font-family: inherit;
+    background: var(--surface);
+    color: var(--text);
+    box-sizing: border-box;
+  }
+  .modal-box input:focus {
+    outline: none;
+    border-color: var(--primary-mid);
+    box-shadow: 0 0 0 3px rgba(94, 113, 134, 0.18);
+  }
+  .modal-message {
+    color: var(--text-soft);
+    font-size: 14px;
+    line-height: 1.5;
+    margin-top: 4px;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 18px;
+  }
+  .modal-btn {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 10px 18px;
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-soft);
+    font-family: inherit;
+  }
+  .modal-btn:hover { background: var(--surface-3); color: var(--text); }
+  .modal-btn.primary {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+  .modal-btn.primary:hover { background: var(--primary-ink); color: white; }
+  .modal-btn.danger.primary { background: var(--danger); border-color: var(--danger); }
+  .modal-btn.danger.primary:hover { background: #8b4930; }
 </style>
 </head>
 <body>
@@ -900,37 +1090,16 @@
 
 <div class="app" id="appRoot" style="display:none;">
 
-  <!-- Hero -->
-  <div class="hero">
+  <!-- Hero (minimal) -->
+  <div class="hero hero-slim">
     <div class="hero-eyebrow">5.–18. September 2026 · Sardinien · 2 Wochen</div>
     <h1>Ciao Sardegna<span class="accent-dot">.</span></h1>
-    <p>Unsere gemeinsame Reise-Drehscheibe für die 3 Familien — alles an einem Ort, immer dabei.</p>
-
-    <div class="hero-meta">
-      <div class="meta-card">
-        <div class="label">Reisedaten</div>
-        <div class="value">5.–18.9.</div>
-      </div>
-      <div class="meta-card">
-        <div class="label">Dauer</div>
-        <div class="value">14 Tage</div>
-      </div>
-      <div class="meta-card">
-        <div class="label">Crew</div>
-        <div class="value" id="crewCount">–</div>
-      </div>
-      <div class="meta-card">
-        <div class="label">Tage bis Abreise</div>
-        <div class="value" id="countdown">–</div>
-      </div>
-    </div>
-
-    <div class="crew-row" id="crewRow"></div>
   </div>
 
   <!-- Tabs -->
   <div class="tabs" id="tabBar">
-    <button class="tab active" data-view="packliste"><span class="tab-emoji">🎒</span>Packliste</button>
+    <button class="tab active" data-view="uebersicht"><span class="tab-emoji">🌿</span>Übersicht</button>
+    <button class="tab" data-view="packliste"><span class="tab-emoji">🎒</span>Packliste</button>
     <button class="tab" data-view="einkaufen"><span class="tab-emoji">🛒</span>Einkaufen vor Ort</button>
     <button class="tab" data-view="wetter"><span class="tab-emoji">☀️</span>Wetter September</button>
     <button class="tab" data-view="ausfluege"><span class="tab-emoji">🏖️</span>Ausflüge</button>
@@ -940,8 +1109,38 @@
     <button class="tab" data-view="tipps"><span class="tab-emoji">💡</span>Tipps</button>
   </div>
 
+  <!-- VIEW: Übersicht / Dashboard -->
+  <section class="view active" id="view-uebersicht">
+    <div class="card dashboard-card">
+      <h2>🌿 Übersicht</h2>
+      <p class="sub">Eure Reise auf einen Blick. Unten die Crew — jede/r kann den eigenen Namen ändern, entfernen kann nur Michèle.</p>
+
+      <div class="dashboard-grid">
+        <div class="dash-tile">
+          <div class="d-label">Reisedaten</div>
+          <div class="d-val">5.–18.9.</div>
+        </div>
+        <div class="dash-tile">
+          <div class="d-label">Dauer</div>
+          <div class="d-val">14 Tage</div>
+        </div>
+        <div class="dash-tile">
+          <div class="d-label">Crew</div>
+          <div class="d-val" id="crewCount">–</div>
+        </div>
+        <div class="dash-tile">
+          <div class="d-label">Tage bis Abreise</div>
+          <div class="d-val" id="countdown">–</div>
+        </div>
+      </div>
+
+      <h3 class="dash-subhead">Crew</h3>
+      <div id="crewList" class="crew-list"></div>
+    </div>
+  </section>
+
   <!-- VIEW: Packliste -->
-  <section class="view active" id="view-packliste">
+  <section class="view" id="view-packliste">
     <div class="card">
       <h2 id="packHeading">🎒 Packliste</h2>
       <p class="sub" id="packSub">Gemeinsame Sachen + persönlicher Kram pro Familie.</p>
@@ -956,7 +1155,7 @@
         </div>
         <div id="packlisteContainer"></div>
         <div class="add-row">
-          <input type="text" id="newPackItem" placeholder="Neues gemeinsames Item …" />
+          <input type="text" id="newPackItem" placeholder="Neues gemeinsames Item …" maxlength="80" />
           <select id="newPackGroup"></select>
           <button onclick="addPackItem()">Hinzufügen</button>
         </div>
@@ -973,7 +1172,7 @@
         </div>
         <div id="packPersonalContainer"></div>
         <div class="add-row">
-          <input type="text" id="newPersonalItem" placeholder="Neues Item für eure Familie …" />
+          <input type="text" id="newPersonalItem" placeholder="Neues Item für eure Familie …" maxlength="80" />
           <select id="newPersonalGroup"></select>
           <button onclick="addPersonalItem()">Hinzufügen</button>
         </div>
@@ -995,7 +1194,7 @@
       </div>
       <div id="shoppingContainer"></div>
       <div class="add-row">
-        <input type="text" id="newShopItem" placeholder="z. B. Bottarga, Pecorino Sardo …" />
+        <input type="text" id="newShopItem" placeholder="z. B. Bottarga, Pecorino Sardo …" maxlength="80" />
         <select id="newShopGroup"></select>
         <button onclick="addShopItem()">Hinzufügen</button>
       </div>
@@ -1044,7 +1243,7 @@
       <p class="sub">Mein Vorschlag, sortiert nach Region. Abhaken, was ihr machen wollt. Karten-Links öffnen Google Maps.</p>
       <div class="excursion-grid" id="excursionGrid"></div>
       <div class="add-row" style="margin-top:18px;">
-        <input type="text" id="newExcursion" placeholder="Eigener Vorschlag …" />
+        <input type="text" id="newExcursion" placeholder="Eigener Vorschlag …" maxlength="60" />
         <button onclick="addExcursion()">Hinzufügen</button>
       </div>
     </div>
@@ -1080,7 +1279,7 @@
 
       <div class="add-row" style="margin-top:14px; flex-wrap: wrap;">
         <input type="date" id="expDate" style="flex: 0 0 150px;" />
-        <input type="text" id="expDesc" placeholder="z. B. Wocheneinkauf Conad" />
+        <input type="text" id="expDesc" placeholder="z. B. Wocheneinkauf Conad" maxlength="80" />
         <select id="expWho"></select>
         <input type="number" id="expAmt" placeholder="Betrag €" step="0.01" style="flex: 0 0 120px;" />
         <button onclick="addExpense()">Buchen</button>
@@ -1119,11 +1318,6 @@
           <div class="e-num">1530</div>
           <div class="e-desc">Bei Problemen am/auf dem Wasser. Wichtig wenn Boot.</div>
         </div>
-        <div class="emerg">
-          <div class="e-label">Apotheken-Notdienst</div>
-          <div class="e-num">800 420 707</div>
-          <div class="e-desc">Apotheke in der Nähe finden (Farmacia di turno).</div>
-        </div>
       </div>
 
       <div class="callout warn">
@@ -1135,8 +1329,8 @@
         <p class="sub">Vermieter, Bootsverleih, Arzt vor Ort …</p>
         <div id="customContacts"></div>
         <div class="add-row" style="flex-wrap:wrap;">
-          <input type="text" id="contactLabel" placeholder="Bezeichnung (z. B. Vermieter Villa)" />
-          <input type="text" id="contactNum" placeholder="Nummer" style="flex: 0 0 180px;" />
+          <input type="text" id="contactLabel" placeholder="Bezeichnung (z. B. Vermieter Villa)" maxlength="40" />
+          <input type="text" id="contactNum" placeholder="Nummer" style="flex: 0 0 180px;" maxlength="30" />
           <button onclick="addContact()">Speichern</button>
         </div>
       </div>
@@ -1165,8 +1359,8 @@
       </div>
 
       <div class="rec">
-        <h4>🚗 Mietwagen</h4>
-        <p>Kleinwagen reichen nicht für 9 Personen — entweder zwei Mietwagen oder ein 9-Sitzer. Tankstellen auf dem Land schliessen oft 12–15 Uhr Siesta, immer halbvoll halten.</p>
+        <h4>⛽ Tanken</h4>
+        <p>Tankstellen auf dem Land schliessen oft 12–15 Uhr Siesta. Tank immer halbvoll halten — vor allem im Inland und nördlichen Hinterland gibt's lange Strecken ohne Versorgung.</p>
       </div>
 
       <div class="rec">
@@ -1223,6 +1417,19 @@
     </div>
   </div>
 
+</div>
+
+<!-- Custom Modal (replaces prompt/confirm) -->
+<div class="modal-backdrop" id="modalBackdrop" style="display:none;">
+  <div class="modal-box" role="dialog" aria-modal="true">
+    <div class="modal-title" id="modalTitle">…</div>
+    <input type="text" id="modalInput" maxlength="30" autocomplete="off" />
+    <div class="modal-message" id="modalMessage" style="display:none;"></div>
+    <div class="modal-actions">
+      <button class="modal-btn" id="modalCancel">Abbrechen</button>
+      <button class="modal-btn primary" id="modalOk">OK</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1295,23 +1502,25 @@ function renderGateExisting() {
   list.forEach(m => {
     const chip = document.createElement('span');
     chip.className = 'crew-chip';
-    chip.innerHTML = `<span class="dot" style="background:${m.color}"></span>${escapeHtml(m.name)}`;
+    chip.innerHTML = `<span class="dot" style="background:${safeColor(m.color)}"></span>${escapeHtml(m.name)}`;
     inner.appendChild(chip);
   });
 }
 
 function tryUnlock() {
   const pw = document.getElementById('gatePw').value;
-  const name = document.getElementById('gateName').value.trim();
+  const rawName = document.getElementById('gateName').value.trim().slice(0, 24);
   const err = document.getElementById('gateError');
   err.textContent = '';
 
   if (pw !== PASSWORD) { err.textContent = 'Falsches Passwort. Versuch nochmal.'; return; }
-  if (!name) { err.textContent = 'Bitte gib deinen Namen ein.'; return; }
-  if (!selectedColor) { err.textContent = 'Bitte wähl eine Farbe.'; return; }
+  if (!rawName) { err.textContent = 'Bitte gib deinen Namen ein.'; return; }
+  if (!selectedColor || !COLOR_PALETTE.includes(selectedColor)) {
+    err.textContent = 'Bitte wähl eine Farbe.'; return;
+  }
 
   const userId = 'u_' + Math.random().toString(36).slice(2, 10);
-  me = { id: userId, name, color: selectedColor };
+  me = { id: userId, name: rawName, color: selectedColor };
   localStorage.setItem(USER_KEY, JSON.stringify(me));
 
   state.members = state.members || [];
@@ -1327,16 +1536,10 @@ function logout() {
   location.reload();
 }
 
-function removeMe() {
-  if (!confirm('Dein Profil aus der Crew entfernen?')) return;
-  state.members = (state.members || []).filter(m => m.id !== me.id);
-  // Reassign anything assigned to me back to 'open'
-  state.pack.forEach(g => g.items.forEach(i => { if (i.who === me.id) i.who = 'open'; }));
-  state.meals.forEach(m => { if (m.family === me.id) m.family = 'open'; });
-  queueSync();
-  localStorage.removeItem(USER_KEY);
-  location.reload();
-}
+/* removeMe() entfernt — war an keinen Button gebunden und hätte die
+   Regel «nur Michèle entfernt Mitglieder» umgehen können.
+   Wer aussteigen will: «Abmelden» (Profil bleibt in der Crew) oder
+   Michèle bitten, die Zeile zu entfernen. */
 
 /* ====== STATE ====== */
 
@@ -1493,7 +1696,7 @@ function showApp() {
   document.getElementById('syncPill').style.display = '';
   document.getElementById('userPill').style.display = '';
   document.getElementById('userLabel').innerHTML =
-    `<span style="width:8px; height:8px; border-radius:50%; background:${me.color}; display:inline-block; margin-right:6px;"></span>Du bist ${escapeHtml(me.name)}`;
+    `<span style="width:8px; height:8px; border-radius:50%; background:${safeColor(me.color)}; display:inline-block; margin-right:6px;"></span>Du bist ${escapeHtml(me.name)}`;
   initSync();
   renderAll();
 }
@@ -1641,30 +1844,116 @@ function renderHero() {
   const today = new Date();
   today.setHours(0,0,0,0);
   const diff = Math.ceil((dep - today) / (1000 * 60 * 60 * 24));
-  document.getElementById('countdown').textContent = diff > 0 ? diff + ' Tage' : (diff === 0 ? 'Heute!' : 'unterwegs');
-  document.getElementById('crewCount').textContent = (state.members || []).length;
-  renderCrewRow();
+  const cd = document.getElementById('countdown');
+  if (cd) cd.textContent = diff > 0 ? diff + ' Tage' : (diff === 0 ? 'Heute!' : 'unterwegs');
+  const cc = document.getElementById('crewCount');
+  if (cc) cc.textContent = (state.members || []).length;
+  renderCrewList();
 }
 
-function renderCrewRow() {
-  const row = document.getElementById('crewRow');
-  row.innerHTML = '';
+function renderCrewList() {
+  const list = document.getElementById('crewList');
+  if (!list) return;
+  list.innerHTML = '';
   const members = state.members || [];
   if (!members.length) {
-    row.innerHTML = '<span class="crew-chip empty">Noch keine Crew angemeldet</span>';
+    list.innerHTML = '<div class="crew-empty">Noch keine Crew angemeldet</div>';
     return;
   }
-  members.forEach(m => {
-    const chip = document.createElement('span');
-    chip.className = 'crew-chip' + (me && m.id === me.id ? ' me' : '');
-    chip.innerHTML = `<span class="dot" style="background:${m.color}"></span>${escapeHtml(m.name)}${me && m.id === me.id ? ' · du' : ''}`;
-    if (me && m.id === me.id) {
-      chip.style.cursor = 'pointer';
-      chip.title = 'Profil entfernen';
-      chip.onclick = removeMe;
-    }
-    row.appendChild(chip);
+  const admin = isAdmin();
+  const aid = adminId();
+  members.forEach((m) => {
+    const isMe = me && m.id === me.id;
+    const canRename = admin || isMe;          // sich selbst umbenennen darf jede/r
+    const canRemove = admin;                  // entfernen darf NUR der Admin
+    const isAdminRow = aid && m.id === aid;
+    const row = document.createElement('div');
+    row.className = 'crew-row-item' + (isMe ? ' me-row' : '');
+    row.innerHTML = `
+      <span class="dot" style="background:${safeColor(m.color)}"></span>
+      <span class="name">${escapeHtml(m.name)}${isMe ? '<span class="me-tag">· du</span>' : ''}${isAdminRow ? '<span class="me-tag" title="Admin">· Admin</span>' : ''}</span>
+      ${canRename ? `<button class="crew-btn" data-act="rename">Umbenennen</button>` : ''}
+      ${canRemove ? `<button class="crew-btn danger" data-act="remove">Entfernen</button>` : ''}
+    `;
+    const rn = row.querySelector('[data-act="rename"]');
+    if (rn) rn.onclick = () => renameMember(m.id);
+    const rm = row.querySelector('[data-act="remove"]');
+    if (rm) rm.onclick = () => removeMember(m.id);
+    list.appendChild(row);
   });
+}
+
+/* Admin-Identität.
+   ADMIN_ID leer lassen = die zuerst angemeldete Person (members[0]) ist Admin.
+   Sobald du deine eigene ID kennst, hier fest eintragen — dann bleibt der
+   Admin-Status auch erhalten, wenn sich die Reihenfolge der Crew ändert.
+   Deine ID findest du in der Browser-Konsole mit:
+     JSON.parse(localStorage.getItem('sardinien_user_v1')).id            */
+const ADMIN_ID = '';
+
+function adminId() {
+  if (ADMIN_ID) return ADMIN_ID;
+  return (state.members && state.members[0] && state.members[0].id) || null;
+}
+
+function isAdmin() {
+  return !!(me && adminId() && adminId() === me.id);
+}
+
+/* Umbenennen: Admin darf alle, alle anderen nur sich selbst. */
+function canEditMember(id) {
+  return isAdmin() || !!(me && me.id === id);
+}
+
+/* Entfernen: ausschliesslich der Admin — auch nicht die eigene Zeile. */
+function canRemoveMember(id) {
+  return isAdmin();
+}
+
+async function renameMember(id) {
+  if (!canEditMember(id)) return;
+  const m = (state.members || []).find(x => x.id === id);
+  if (!m) return;
+  const raw = await askText(`«${m.name}» umbenennen in:`, m.name);
+  if (raw == null) return;
+  const newName = raw.trim().slice(0, 24);
+  if (!newName || newName === m.name) return;
+  m.name = newName;
+  if (me && me.id === id) {
+    me.name = newName;
+    localStorage.setItem(USER_KEY, JSON.stringify(me));
+    document.getElementById('userLabel').innerHTML =
+      `<span style="width:8px; height:8px; border-radius:50%; background:${safeColor(me.color)}; display:inline-block; margin-right:6px;"></span>Du bist ${escapeHtml(me.name)}`;
+  }
+  saveState();
+  renderAll();
+}
+
+async function removeMember(id) {
+  if (!canRemoveMember(id)) {
+    await askConfirm('Nur Michèle kann Mitglieder aus der Crew entfernen. Wenn du raus willst: melde dich ab oder frag Michèle.', {
+      title: 'Nicht erlaubt', confirmLabel: 'OK', cancelLabel: ''
+    });
+    return;
+  }
+  const m = (state.members || []).find(x => x.id === id);
+  if (!m) return;
+  const isSelf = me && me.id === id;
+  const label = isSelf ? 'dich selbst' : `«${m.name}»`;
+  const ok = await askConfirm(`Wirklich ${label} aus der Crew entfernen? Zuweisungen werden auf «noch offen» gesetzt.`, {
+    title: 'Entfernen?', confirmLabel: 'Entfernen', danger: true
+  });
+  if (!ok) return;
+  state.members = (state.members || []).filter(x => x.id !== id);
+  (state.pack || []).forEach(g => (g.items || []).forEach(i => { if (i.who === id) i.who = 'open'; }));
+  (state.meals || []).forEach(meal => { if (meal.family === id) meal.family = 'open'; });
+  saveState();
+  if (isSelf) {
+    localStorage.removeItem(USER_KEY);
+    location.reload();
+    return;
+  }
+  renderAll();
 }
 
 /* ====== PACKLISTE ====== */
@@ -1708,7 +1997,7 @@ function renderPacklist() {
     b.className = 'subtab' + (activePackTab === tabId ? ' active' : '');
     b.dataset.tab = tabId;
     const mineMarker = (me && me.color === color) ? ' · du' : '';
-    b.innerHTML = `<span class="dot" style="background:${color}"></span>${escapeHtml(familyLabel(color))}${mineMarker}`;
+    b.innerHTML = `<span class="dot" style="background:${safeColor(color)}"></span>${escapeHtml(familyLabel(color))}${mineMarker}`;
     memberTabs.appendChild(b);
   });
 
@@ -1806,7 +2095,7 @@ function renderSharedPackItems(filter) {
       li.innerHTML = `
         <input type="checkbox" ${item.done ? 'checked' : ''} />
         <span class="label">${escapeHtml(item.text)}</span>
-        <button class="assignee ${isOpen ? 'empty' : ''}" style="${!isOpen ? 'background:' + member.color + '22; color:' + shade(member.color) + '; border-color: transparent;' : ''}">${escapeHtml(member.name)}</button>
+        <button class="assignee ${isOpen ? 'empty' : ''}" style="${!isOpen ? 'background:' + safeColor(member.color) + '22; color:' + shade(member.color) + '; border-color: transparent;' : ''}">${escapeHtml(member.name)}</button>
         <button class="del" title="Löschen">×</button>
       `;
       li.querySelector('input').onchange = (e) => { item.done = e.target.checked; saveState(); renderSharedPackItems(filter); };
@@ -1960,9 +2249,10 @@ function cycleAssignee(item) {
 function addPackItem() {
   const input = document.getElementById('newPackItem');
   const groupName = document.getElementById('newPackGroup').value;
-  const text = input.value.trim();
+  const text = input.value.trim().slice(0, 80);
   if (!text) return;
   const g = state.pack.find(g => g.group === groupName);
+  if (!g) return;
   g.items.push({ id: uid(), text, who: 'open', done: false });
   input.value = '';
   saveState();
@@ -1974,7 +2264,7 @@ function addPersonalItem() {
   const color = activePackTab.slice(6);
   const input = document.getElementById('newPersonalItem');
   const groupName = document.getElementById('newPersonalGroup').value;
-  const text = input.value.trim();
+  const text = input.value.trim().slice(0, 80);
   if (!text || !groupName) return;
   const groups = ensurePersonalPack(color);
   const g = groups.find(g => g.group === groupName);
@@ -1985,22 +2275,22 @@ function addPersonalItem() {
   renderPersonalPack(color);
 }
 
-function addCategory(scope) {
-  let name = prompt('Name der neuen Kategorie?');
-  if (!name) return;
-  name = name.trim();
+async function addCategory(scope) {
+  const raw = await askText('Name der neuen Kategorie?');
+  if (raw == null) return;
+  const name = raw.trim().slice(0, 30);
   if (!name) return;
 
   if (scope === 'shared') {
     if (state.pack.some(g => g.group.toLowerCase() === name.toLowerCase())) {
-      alert('Kategorie gibt es schon.'); return;
+      await askConfirm('Kategorie gibt es schon.', { title: 'Duplikat', confirmLabel: 'OK', cancelLabel: '' }); return;
     }
     state.pack.push({ group: name, items: [] });
     saveState();
     renderSharedPack();
   } else if (scope === 'shop') {
     if (state.shop.some(g => g.group.toLowerCase() === name.toLowerCase())) {
-      alert('Kategorie gibt es schon.'); return;
+      await askConfirm('Kategorie gibt es schon.', { title: 'Duplikat', confirmLabel: 'OK', cancelLabel: '' }); return;
     }
     state.shop.push({ group: name, items: [] });
     saveState();
@@ -2010,7 +2300,7 @@ function addCategory(scope) {
     const color = activePackTab.slice(6);
     const groups = ensurePersonalPack(color);
     if (groups.some(g => g.group.toLowerCase() === name.toLowerCase())) {
-      alert('Kategorie gibt es schon.'); return;
+      await askConfirm('Kategorie gibt es schon.', { title: 'Duplikat', confirmLabel: 'OK', cancelLabel: '' }); return;
     }
     groups.push({ group: name, items: [] });
     saveState();
@@ -2110,9 +2400,10 @@ function renderShoppingItems(filter) {
 function addShopItem() {
   const input = document.getElementById('newShopItem');
   const groupName = document.getElementById('newShopGroup').value;
-  const text = input.value.trim();
+  const text = input.value.trim().slice(0, 80);
   if (!text) return;
   const g = state.shop.find(g => g.group === groupName);
+  if (!g) return;
   g.items.push({ id: uid(), text, done: false });
   input.value = '';
   saveState();
@@ -2162,7 +2453,7 @@ function renderExcursions() {
 
 function addExcursion() {
   const input = document.getElementById('newExcursion');
-  const text = input.value.trim();
+  const text = input.value.trim().slice(0, 60);
   if (!text) return;
   state.excursions.push({ id: uid(), name: text, region: '', cat: 'Eigen', desc: '', map: '', done: false });
   input.value = '';
@@ -2264,7 +2555,7 @@ function renderExpenses() {
       tr.innerHTML = `
         <td>${exp.date || '–'}</td>
         <td>${escapeHtml(exp.desc)}</td>
-        <td><span style="color:${member.color}; font-weight:600;">${escapeHtml(member.name)}</span></td>
+        <td><span style="color:${safeColor(member.color)}; font-weight:600;">${escapeHtml(member.name)}</span></td>
         <td class="num">${exp.amount.toFixed(2)} €</td>
         <td><button class="del" title="Löschen">×</button></td>
       `;
@@ -2286,7 +2577,7 @@ function renderExpenses() {
     const fSum = state.expenses.filter(e => e.who === m.id).reduce((s, e) => s + e.amount, 0);
     const div = document.createElement('div');
     div.className = 'exp-card';
-    div.innerHTML = `<div class="who">${escapeHtml(m.name)}</div><div class="amt" style="color:${m.color};">${fSum.toFixed(2)} €</div>`;
+    div.innerHTML = `<div class="who">${escapeHtml(m.name)}</div><div class="amt" style="color:${safeColor(m.color)};">${fSum.toFixed(2)} €</div>`;
     sum.appendChild(div);
   });
   if (members.length) {
@@ -2299,15 +2590,15 @@ function renderExpenses() {
 
 function addExpense() {
   const date = document.getElementById('expDate').value;
-  const desc = document.getElementById('expDesc').value.trim();
+  const desc = document.getElementById('expDesc').value.trim().slice(0, 80);
   const who = document.getElementById('expWho').value;
   const amount = parseFloat(document.getElementById('expAmt').value);
   if (!who) { alert('Es ist noch niemand angemeldet — erst Crew anmelden.'); return; }
-  if (!desc || isNaN(amount) || amount <= 0) {
-    alert('Bitte Beschreibung und Betrag ausfüllen.');
+  if (!desc || isNaN(amount) || amount <= 0 || amount > 999999) {
+    alert('Bitte Beschreibung und gültigen Betrag ausfüllen.');
     return;
   }
-  state.expenses.push({ id: uid(), date, desc, who, amount });
+  state.expenses.push({ id: uid(), date, desc, who, amount: Math.round(amount * 100) / 100 });
   document.getElementById('expDesc').value = '';
   document.getElementById('expAmt').value = '';
   saveState();
@@ -2327,7 +2618,7 @@ function renderContacts() {
     const div = document.createElement('div');
     div.className = 'item';
     div.innerHTML = `
-      <span class="label"><strong>${escapeHtml(co.label)}:</strong> <a href="tel:${co.num}" style="color: var(--primary-mid); text-decoration: none;">${escapeHtml(co.num)}</a></span>
+      <span class="label"><strong>${escapeHtml(co.label)}:</strong> <a href="tel:${encodeURIComponent(String(co.num || ''))}" style="color: var(--primary-mid); text-decoration: none;">${escapeHtml(co.num)}</a></span>
       <button class="del">×</button>
     `;
     div.querySelector('.del').onclick = () => {
@@ -2340,8 +2631,8 @@ function renderContacts() {
 }
 
 function addContact() {
-  const label = document.getElementById('contactLabel').value.trim();
-  const num = document.getElementById('contactNum').value.trim();
+  const label = document.getElementById('contactLabel').value.trim().slice(0, 40);
+  const num = document.getElementById('contactNum').value.trim().slice(0, 30);
   if (!label || !num) return;
   state.contacts.push({ id: uid(), label, num });
   document.getElementById('contactLabel').value = '';
@@ -2385,12 +2676,152 @@ function importData(e) {
 
 /* ====== UTILS ====== */
 
+/* ====== MODAL DIALOGS (replace prompt/confirm) ====== */
+
+let _modalCleanup    = null;
+let _modalGuardUntil = 0;      // Klicks vor diesem Zeitpunkt dürfen nicht schliessen
+let _modalDownOnBd   = false;  // hat die Geste auf dem Backdrop begonnen?
+let _modalKeyHandler = null;
+
+/* Öffnet den Dialog und setzt ein kurzes Schutzfenster.
+   Grund: iOS/Safari kann den click des öffnenden Taps auf das gerade
+   eingeblendete Backdrop umleiten ("Ghost-Click") — der Dialog ploppte
+   dadurch auf und war sofort wieder weg. */
+function _modalShow(bd) {
+  _modalGuardUntil = Date.now() + 450;
+  _modalDownOnBd   = false;
+  bd.style.display = '';
+}
+
+/* Backdrop schliesst nur, wenn die Geste dort begonnen UND geendet hat
+   und das Schutzfenster vorbei ist. */
+function _modalWireBackdrop(bd, onDismiss) {
+  bd.onpointerdown = (e) => { _modalDownOnBd = (e.target === bd); };
+  bd.onmousedown   = (e) => { if (e.type === 'mousedown' && !window.PointerEvent) _modalDownOnBd = (e.target === bd); };
+  bd.onclick = (e) => {
+    if (e.target !== bd) return;
+    if (Date.now() < _modalGuardUntil) return;
+    if (!_modalDownOnBd) return;
+    onDismiss();
+  };
+}
+
+function _modalHide(bd, ok, cnl, inp) {
+  bd.style.display = 'none';
+  ok.onclick = null; cnl.onclick = null;
+  bd.onclick = null; bd.onpointerdown = null; bd.onmousedown = null;
+  inp.onkeydown = null;
+  inp.style.display = '';                 // für den nächsten askText zurücksetzen
+  if (_modalKeyHandler) {
+    document.removeEventListener('keydown', _modalKeyHandler, true);
+    _modalKeyHandler = null;
+  }
+}
+
+function _modalEls() {
+  return {
+    bd:  document.getElementById('modalBackdrop'),
+    ttl: document.getElementById('modalTitle'),
+    inp: document.getElementById('modalInput'),
+    msg: document.getElementById('modalMessage'),
+    ok:  document.getElementById('modalOk'),
+    cnl: document.getElementById('modalCancel')
+  };
+}
+
+function askText(question, defaultValue) {
+  return new Promise(resolve => {
+    if (_modalCleanup) _modalCleanup(null);
+    const { bd, ttl, inp, msg, ok, cnl } = _modalEls();
+
+    ttl.textContent = question;
+    inp.style.display = '';
+    inp.value = defaultValue || '';
+    msg.style.display = 'none';
+    ok.textContent = 'OK';
+    ok.className = 'modal-btn primary';
+    cnl.textContent = 'Abbrechen';
+    cnl.style.display = '';
+    _modalShow(bd);
+
+    setTimeout(() => { try { inp.focus(); inp.select(); } catch(e){} }, 60);
+
+    function done(result) {
+      _modalCleanup = null;
+      _modalHide(bd, ok, cnl, inp);
+      resolve(result);
+    }
+    _modalCleanup = done;
+    ok.onclick  = (e) => { if (e) e.stopPropagation(); done(inp.value); };
+    cnl.onclick = (e) => { if (e) e.stopPropagation(); done(null); };
+    _modalWireBackdrop(bd, () => done(null));
+
+    _modalKeyHandler = (e) => {
+      if (e.key === 'Enter')       { e.preventDefault(); e.stopPropagation(); done(inp.value); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); done(null); }
+    };
+    document.addEventListener('keydown', _modalKeyHandler, true);
+  });
+}
+
+function askConfirm(message, opts) {
+  opts = opts || {};
+  return new Promise(resolve => {
+    if (_modalCleanup) _modalCleanup(false);
+    const { bd, ttl, inp, msg, ok, cnl } = _modalEls();
+
+    ttl.textContent = opts.title || 'Sicher?';
+    inp.style.display = 'none';
+    msg.textContent = message;
+    msg.style.display = '';
+    ok.textContent = opts.confirmLabel || 'Ja';
+    ok.className = 'modal-btn primary' + (opts.danger ? ' danger' : '');
+    // cancelLabel: '' bedeutet "kein Abbrechen-Button" (reine Hinweis-Meldung)
+    const hideCancel = opts.cancelLabel === '';
+    cnl.textContent = opts.cancelLabel || 'Abbrechen';
+    cnl.style.display = hideCancel ? 'none' : '';
+    _modalShow(bd);
+
+    setTimeout(() => { try { ok.focus(); } catch(e){} }, 60);
+
+    function done(result) {
+      _modalCleanup = null;
+      _modalHide(bd, ok, cnl, inp);
+      cnl.style.display = '';
+      resolve(result);
+    }
+    _modalCleanup = done;
+    ok.onclick  = (e) => { if (e) e.stopPropagation(); done(true); };
+    cnl.onclick = (e) => { if (e) e.stopPropagation(); done(false); };
+    _modalWireBackdrop(bd, () => done(hideCancel ? true : false));
+
+    _modalKeyHandler = (e) => {
+      if (e.key === 'Enter')       { e.preventDefault(); e.stopPropagation(); done(true); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); done(hideCancel ? true : false); }
+    };
+    document.addEventListener('keydown', _modalKeyHandler, true);
+  });
+}
+
 function escapeHtml(s) {
   if (s == null) return '';
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+// Strict hex color validator — whitelist only #rrggbb / #rgb
+function safeColor(c, fallback) {
+  if (typeof c !== 'string') return fallback || '#94a3b8';
+  if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(c)) return c;
+  return fallback || '#94a3b8';
+}
+// Alias used in attribute context
+function escapeAttr(s) { return escapeHtml(s); }
+
 function shade(hex) {
+  hex = safeColor(hex, '#94a3b8');
+  if (hex.length === 4) {
+    hex = '#' + hex[1]+hex[1] + hex[2]+hex[2] + hex[3]+hex[3];
+  }
   const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
   return `rgb(${Math.floor(r*0.55)},${Math.floor(g*0.55)},${Math.floor(b*0.55)})`;
 }
