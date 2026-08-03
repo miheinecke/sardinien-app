@@ -1537,6 +1537,9 @@ const PASSWORD = "sardegna2026";
 const SCHEMA_VERSION = 3;
 const STORAGE_KEY = 'sardinien-app';
 const USER_KEY = 'sardinien-app-user';
+/* Reservierter Schlüssel innerhalb von personalPack für die Reisedaten.
+   Kein 6-stelliger Hex-Wert, kollidiert also nie mit einer Familienfarbe. */
+const TRIP_KEY = '__trip';
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
@@ -1648,8 +1651,8 @@ function defaultState() {
     meals: [],
     expenses: [],
     contacts: [],
-    departureDate: '2026-09-05',
-    tripDates: {}            // Farbe -> { from, to }, pro Familie
+    departureDate: '2026-09-05'
+    // Reisedaten pro Familie liegen in personalPack[TRIP_KEY]
   };
 }
 
@@ -1704,27 +1707,38 @@ function normalizeState(s) {
 
   if (!s.personalPack || typeof s.personalPack !== 'object') s.personalPack = {};
   Object.keys(s.personalPack).forEach(k => {
+    if (k === TRIP_KEY) return;          // Reisedaten, keine Packlisten-Gruppen
     s.personalPack[k] = normalizeGroups(s.personalPack[k]);
   });
+
+  // Reisedaten liegen unter personalPack.__trip, weil die Firebase-Rules
+  // dieses Feld ohne Einschränkung erlauben — kein Rules-Update nötig.
+  // Altbestand von einem früheren Zwischenstand mitnehmen:
+  const rohDaten = s.personalPack[TRIP_KEY] || s.tripDates;
+  delete s.tripDates;
+  s.personalPack[TRIP_KEY] = normalizeTripDates(rohDaten);
 
   if (typeof s.departureDate !== 'string' || !s.departureDate) {
     s.departureDate = '2026-09-05';
   }
+  return s;
+}
 
-  // tripDates: Farbe -> { from, to }. Nur vollständige, plausible Paare behalten.
-  const td = {};
-  if (s.tripDates && typeof s.tripDates === 'object') {
-    Object.keys(s.tripDates).forEach(k => {
-      const v = s.tripDates[k];
+/* Reisedaten-Map: Farbe -> { from, to }.
+   Nur vollständige, plausible Paare überleben. */
+function normalizeTripDates(raw) {
+  const out = {};
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    Object.keys(raw).forEach(k => {
+      const v = raw[k];
       if (v && typeof v.from === 'string' && typeof v.to === 'string'
           && /^\d{4}-\d{2}-\d{2}$/.test(v.from) && /^\d{4}-\d{2}-\d{2}$/.test(v.to)
           && v.from <= v.to) {
-        td[colorKey(k)] = { from: v.from, to: v.to };
+        out[colorKey(k)] = { from: v.from, to: v.to };
       }
     });
   }
-  s.tripDates = td;
-  return s;
+  return out;
 }
 
 function saveLocal() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
@@ -1742,7 +1756,6 @@ function uid() { return Math.random().toString(36).slice(2, 10); }
 let isApplyingRemote = false;
 let saveTimer = null;
 let firstSyncDone = false;
-let tripDatesBlocked = false;   // true = Rules kennen tripDates noch nicht
 
 function setSyncStatus(status, label) {
   const pill = document.getElementById('syncPill');
@@ -1817,33 +1830,10 @@ function pushState() {
   sanitizePersonalPackKeys();
   setSyncStatus('syncing', 'Speichere…');
   stateRef.set(state)
-    .then(() => {
-      tripDatesBlocked = false;
-      setSyncStatus('', 'Synchronisiert ' + nowLabel());
-    })
+    .then(() => setSyncStatus('', 'Synchronisiert ' + nowLabel()))
     .catch(err => {
-      /* Solange die Firebase-Rules tripDates noch nicht kennen, lehnt der
-         Server den ganzen Write ab. Dann nochmal ohne tripDates schicken —
-         so bleibt die App für alle nutzbar, nur die Reisedaten sind lokal.
-         Sobald die Rules publiziert sind, greift automatisch der Normalfall. */
-      const hatDaten = state.tripDates && Object.keys(state.tripDates).length > 0;
-      if (!hatDaten) {
-        setSyncStatus('offline', 'Fehler — wird gespeichert wenn online');
-        console.error(err);
-        return;
-      }
-      const ohne = { ...state };
-      delete ohne.tripDates;
-      stateRef.set(ohne)
-        .then(() => {
-          tripDatesBlocked = true;
-          setSyncStatus('', 'Synchronisiert ' + nowLabel() + ' (Reisedaten lokal)');
-          renderDateEditor();
-        })
-        .catch(err2 => {
-          setSyncStatus('offline', 'Fehler — wird gespeichert wenn online');
-          console.error(err2);
-        });
+      setSyncStatus('offline', 'Fehler — wird gespeichert wenn online');
+      console.error(err);
     });
 }
 
@@ -2016,11 +2006,19 @@ document.getElementById('tabBar').addEventListener('click', (e) => {
 
 /* ====== REISEDATEN PRO FAMILIE ====== */
 
-/* tripDates ist eine Map Farbe -> { from, to } (beide 'YYYY-MM-DD').
-   Farbe als Schlüssel, weil eine Familie = eine Farbe = evtl. mehrere Personen. */
+/* Reisedaten: Map Farbe -> { from, to } (beide 'YYYY-MM-DD').
+   Farbe als Schlüssel, weil eine Familie = eine Farbe = evtl. mehrere Personen.
+
+   Gespeichert unter personalPack.__trip: die Firebase-Rules erlauben
+   personalPack ohne Einschränkung, ein neues Top-Level-Feld hätten sie
+   dagegen abgelehnt ("$other": false). So braucht es kein Rules-Update. */
 function tripDates() {
-  if (!state.tripDates || typeof state.tripDates !== 'object') state.tripDates = {};
-  return state.tripDates;
+  if (!state.personalPack || typeof state.personalPack !== 'object') state.personalPack = {};
+  const cur = state.personalPack[TRIP_KEY];
+  if (!cur || typeof cur !== 'object' || Array.isArray(cur)) {
+    state.personalPack[TRIP_KEY] = {};
+  }
+  return state.personalPack[TRIP_KEY];
 }
 
 function familyDates(color) {
@@ -2149,12 +2147,8 @@ function renderDateEditor() {
     renderHero();
   };
 
-  if (hint) {
-    if (tripDatesBlocked) {
-      hint.textContent = 'Gespeichert, aber nur auf diesem Gerät — die Firebase-Rules müssen noch für Reisedaten freigegeben werden.';
-    } else if (!mine) {
-      hint.textContent = 'Noch nicht eingetragen — die Kacheln oben füllen sich, sobald beide Daten stehen.';
-    }
+  if (hint && !mine) {
+    hint.textContent = 'Noch nicht eingetragen — die Kacheln oben füllen sich, sobald beide Daten stehen.';
   }
 }
 
