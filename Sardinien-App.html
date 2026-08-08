@@ -1144,7 +1144,7 @@
     </div>
 
     <div class="gate-crew">
-      3 Familien · 5.–18. September 2026 · Sardinien
+      3 Familien · Sardinien | September 2026
     </div>
   </div>
 </div>
@@ -1163,7 +1163,7 @@
 
   <!-- Hero (minimal) -->
   <div class="hero hero-slim">
-    <div class="hero-eyebrow">5.–18. September 2026 · Sardinien · 2 Wochen</div>
+    <div class="hero-eyebrow">Sardinien | September 2026</div>
     <h1>Ciao Sardegna<span class="accent-dot">.</span></h1>
   </div>
 
@@ -1607,12 +1607,22 @@ function tryUnlock() {
     err.textContent = 'Bitte wähl eine Farbe.'; return;
   }
 
-  const userId = 'u_' + Math.random().toString(36).slice(2, 10);
-  me = { id: userId, name: rawName, color: selectedColor };
-  localStorage.setItem(USER_KEY, JSON.stringify(me));
-
   state.members = state.members || [];
-  state.members.push({ ...me });
+
+  // Multi-Device: gleicher Name+Farbe → bestehenden User übernehmen
+  const existing = state.members.find(m =>
+    m && typeof m.name === 'string' &&
+    m.name.trim().toLowerCase() === rawName.trim().toLowerCase() &&
+    m.color === selectedColor
+  );
+  if (existing) {
+    me = { id: existing.id, name: existing.name, color: existing.color };
+  } else {
+    const userId = 'u_' + Math.random().toString(36).slice(2, 10);
+    me = { id: userId, name: rawName, color: selectedColor };
+    state.members.push({ ...me });
+  }
+  localStorage.setItem(USER_KEY, JSON.stringify(me));
 
   showApp();
   queueSync();
@@ -1773,8 +1783,27 @@ function initSync() {
       // Adopt remote — normalizeState repariert von Firebase entfernte
       // leere Arrays (sonst verschwinden neu angelegte Kategorien)
       state = normalizeState({ ...defaultState(), ...remote });
-      // Ensure self in members
+      // Ensure self in members. Wenn die lokale User-ID nicht mehr existiert
+      // (z.B. Admin hat Duplikat gelöscht), Namen+Farbe-Match adoptieren
+      // statt einen neuen Eintrag anzulegen.
       if (me && !(state.members || []).some(m => m.id === me.id)) {
+        const twin = (state.members || []).find(m =>
+          m && typeof m.name === 'string' &&
+          m.name.trim().toLowerCase() === (me.name || '').trim().toLowerCase() &&
+          m.color === me.color
+        );
+        if (twin) {
+          // Adoptieren: keine Neuanlage nötig, nur lokale ID anpassen
+          me = { id: twin.id, name: twin.name, color: twin.color };
+          localStorage.setItem(USER_KEY, JSON.stringify(me));
+          saveLocal();
+          firstSyncDone = true;
+          isApplyingRemote = false;
+          renderAll();
+          setSyncStatus('', 'Live ' + nowLabel());
+          return;
+        }
+        // Kein Match — als neuer User einfügen
         state.members = [...(state.members || []), { ...me }];
         saveLocal();
         firstSyncDone = true;
