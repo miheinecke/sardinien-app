@@ -3003,17 +3003,54 @@ function exportData() {
 function importData(e) {
   const file = e.target.files[0];
   if (!file) return;
-  if (!confirm('Aktuelle Daten werden überschrieben. Fortfahren?')) return;
   const reader = new FileReader();
-  reader.onload = (ev) => {
+  reader.onload = async (ev) => {
     try {
       const imported = JSON.parse(ev.target.result);
+
+      // Format 1: Familien-Packliste (nur eure Familie überschreiben)
+      if (imported && imported.type === 'sardinien-packliste-familie' && Array.isArray(imported.personalPack)) {
+        if (!me || !me.color) {
+          await askConfirm('Bitte erst anmelden, damit klar ist, für welche Familie die Liste ist.', { title: 'Nicht angemeldet', confirmLabel: 'OK', cancelLabel: '' });
+          return;
+        }
+        const groupCount = imported.personalPack.length;
+        const itemCount = imported.personalPack.reduce((s, g) => s + ((g.items && g.items.length) || 0), 0);
+        const ok = await askConfirm(
+          `Eure Familien-Packliste wird auf ${groupCount} Kategorien mit ${itemCount} Items gesetzt. Andere Familien und die gemeinsame Liste bleiben unberührt.`,
+          { title: 'Familien-Packliste importieren?', confirmLabel: 'Ja, importieren' }
+        );
+        if (!ok) return;
+        state.personalPack = state.personalPack || {};
+        state.personalPack[me.color] = imported.personalPack.map(g => ({
+          group: String(g.group || 'Sonstiges').slice(0, 30),
+          items: (g.items || []).map(i => ({
+            id: uid(),
+            text: String((typeof i === 'string' ? i : i.text) || '').slice(0, 80),
+            done: false
+          })).filter(i => i.text)
+        }));
+        saveState();
+        renderAll();
+        await askConfirm('✓ Eure Familien-Packliste wurde importiert. Wechsle zum Packlisten-Tab.', { title: 'Fertig', confirmLabel: 'OK', cancelLabel: '' });
+        return;
+      }
+
+      // Format 2: komplettes State (bestehendes Verhalten)
+      const ok = await askConfirm(
+        'Aktuelle Daten werden komplett überschrieben (alle Familien, alle Listen). Fortfahren?',
+        { title: 'Alles ersetzen?', danger: true, confirmLabel: 'Ja, ersetzen' }
+      );
+      if (!ok) return;
       state = { ...defaultState(), ...imported };
       saveState();
       renderAll();
-      alert('Daten erfolgreich importiert.');
+      await askConfirm('Daten erfolgreich importiert.', { title: 'Fertig', confirmLabel: 'OK', cancelLabel: '' });
     } catch(err) {
-      alert('Fehler beim Importieren: ' + err.message);
+      await askConfirm('Fehler beim Importieren: ' + err.message, { title: 'Fehler', confirmLabel: 'OK', cancelLabel: '' });
+    } finally {
+      // Reset input so re-selecting the same file re-triggers change
+      e.target.value = '';
     }
   };
   reader.readAsText(file);
